@@ -196,9 +196,7 @@ function DarkMode(){
 }
 
 // Switch mode Theme Dark / Light en cliquant sur le logo
-$('.logo').on('click',function(){
-	DarkMode()
-})
+$('.logo').on('click',function(){DarkMode();})
 
 
 
