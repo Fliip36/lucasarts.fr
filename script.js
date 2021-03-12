@@ -4,12 +4,14 @@ $CounterPagination = 0;
 $AllFilter = [];
 $grid = $('.grid'); 
 $cdn = "https://cdn.statically.io/img/lucasarts.fr/";
-$options = "w=376,f=jpeg";
+$options = "w="+parseInt($('.grid-sizer').outerWidth(true))+",f=jpeg";
+$MemoryOpt = $options;
 $optionsLarge = "w=1920,f=jpeg";
 $folder = "assets/media/img/galerie/";
 $timerStart = Date.now();
 $DarkButton = "";
 $DarkMode = true;
+
 // Local Storage & Affichage dans la console.
 if (localStorage.getItem("DarkMode") == "false"){	
 	$DarkButton = "dark-btn";
@@ -24,7 +26,7 @@ setTimeout(console.log.bind(console,"%cTemps de chargement DOM : "+"%c"+(Date.no
 function ajax1(){
 	return $.ajax({
 		url : $folder,
-		async:false,
+		async:true,
 		success: function (data) {
 			$(data).find("a").attr("href", function (i, val) {
 				if( val.match(/\.(jpe?g|png|gif)$/) ) { 
@@ -33,15 +35,15 @@ function ajax1(){
 						<img class="masonry-content" width="600px" height="auto" id="img'+val.split('/').pop().split('-')[0]+'"  src="'+$cdn+$options+'/dev/Gumlet/'+ $folder + val +'">\
 						<img class="user" width="18px" height="18px" alt="Lucas Pires" src="https://cdn.statically.io/img/lucasarts.fr/w=18,f=jpeg/dev/Gumlet/assets/media/img/theme/user.jpg"> \
 						</div>' );
-					$(".grid").prepend($items); 
+					$(".grid").prepend($items); 					
 					console.log.bind(console, "%cTemps de chargement DOM : "+"%c"+(Date.now()-$timerStart)+" ms",'color: #333333;font-size:15px;font-family: "Google", sans-serif;','color: green;font-size:15px;font-family: "Google", sans-serif;');
 				} 
 			});    
 		},
 		error: function(){setTimeout(function(){
-				$('.container-masonry').append("<span class='error'> Oups.<br><b>Il y a une erreur.</b></span>")
-				$('.error').fadeIn().css({'display':'block'})
-				$('.logo').css({'opacity':'1'})
+				$('.container-masonry').append("<span class='error'> Oups.<br><b>Il y a une erreur.</b></span>");
+				$('.error').fadeIn().css({'display':'block'});
+				$('.logo').css({'opacity':'1'});
 			},$AnimationTime);
 		}
 	});	
@@ -49,16 +51,11 @@ function ajax1(){
 
 // Après chargement Ajax
 $.when(ajax1()).done(function(a1){
-    setTimeout(console.log.bind(console,"%cTemps de chargement Ajax : "+"%c"+(Date.now()-$timerStart)+" ms",'color: #333333;font-size:11px;font-family: "Google", sans-serif;','color: green;font-size:11px;font-family: "Google", sans-serif;'),0)
-});
 
-// Au chargement de la page 
-$(window).on('load', function(){ 
-	setTimeout(console.log.bind(console,"%cTemps de chargement Page : "+"%c"+(Date.now()-$timerStart)+" ms",'color: #333333;font-size:11px;font-family: "Google", sans-serif;','color: green;font-size:11px;font-family: "Google", sans-serif;'),0)
-		// Chargement des images puis création Isotope
-        $('.container-masonry').imagesLoaded( function() {
+    setTimeout(console.log.bind(console,"%cTemps de chargement Ajax : "+"%c"+(Date.now()-$timerStart)+" ms",'color: #333333;font-size:11px;font-family: "Google", sans-serif;','color: green;font-size:11px;font-family: "Google", sans-serif;'),0);
 
-        	// On construit la grille isotope
+    	// Au chargement des images
+        $('.container-masonry').imagesLoaded(function(){        	
 			$grid.isotope({
 	          itemSelector : '.grid-item',
 	          layoutMode : 'masonry',
@@ -71,27 +68,24 @@ $(window).on('load', function(){
 	          }
 	        });
 
-	        // Random les éléments
-	        $('.shuffle-button').on( 'click', function() {
-			  $grid.isotope('shuffle');
-			});
+	        // Randomize les éléments
+	        $('.shuffle-button').on( 'click',function(){$grid.isotope('shuffle');});
 
 			// Filtrer les éléments
-			$('.filter-button-group').on( 'click', 'a', function() {
-	          	$('.activefilter').removeClass('activefilter')
-	          	$(this).addClass('activefilter')           
+			$('.filter-button-group').on( 'click', 'a',function(){
+	          	$('.activefilter').removeClass('activefilter');
+	          	$(this).addClass('activefilter');    
 	          	var filterValue = $(this).attr('data-filter');
 	          	$grid.isotope({ filter: filterValue });
 	     	});	
         	
-        	// Lecture des Informations
-			$(".masonry-content").each(function(i,e) {
+        	// Lecture des Informations de l'URL (Exif)
+			$(".masonry-content").each(function(i,e){
 				var fullPath = decodeURIComponent(this.src.split("/").pop().replace('.jpg', ''));
 				var NumberEl = fullPath.split("-")[0];
 				var Title = fullPath.split("-")[1];
 				var Filter = fullPath.split("-")[2].split(',');
 				var Model = fullPath.split("-")[3];
-
 				$AllFilter = $.merge($AllFilter,Filter).filter(function(elem, index, self){return index === self.indexOf(elem);});
 				$(e).parent().addClass(Filter);
 				$(e).attr('alt', Title);		
@@ -102,15 +96,15 @@ $(window).on('load', function(){
 			    
 			});
        
-		// Animation Load
-		$LogoPos = $('.logo')[0].getBoundingClientRect();
-		$('.logo').clone().addClass('CloneLogo').appendTo('.header').delay(2200).queue(function(next){ 
+			// Animation du chargement
+			$LogoPos = $('.logo')[0].getBoundingClientRect();
+			$('.logo').clone().addClass('CloneLogo').appendTo('.header').delay(2200).queue(function(next){ 
 			$('.CloneLogo').css({
 				'top':$LogoPos.top+'px',
 				'transform':'translate(-50%,0%)',
 			});
 
-		next()}).delay($AnimationTime).queue(function(next){ 
+			next()}).delay($AnimationTime).queue(function(next){ 
 			$('.logo').css({'opacity':'1'});
 			$('.CloneLogo').remove();			
 			$('.quote').animate({opacity:1},0);		
@@ -119,14 +113,14 @@ $(window).on('load', function(){
 				$(this).delay((i+1)*50).animate({opacity:1},0);   
 			}); 
 
+			// Console pour les filtes
 			console.group("Filtres");			
 			setTimeout(console.log.bind(console,"%cNombre de Filtres : "+"%c"+$AllFilter.length+"",'color: #333333;font-size:11px;font-family: "Google", sans-serif;','color: #ed1b24;font-size:11px;font-family: "Google", sans-serif;'),0);	
 
 			// Création des filtres
 			$.each($AllFilter, function(index, value) {
-			  $('.filter-button-group').append('\
-			  	 <a class="button '+$DarkButton+'" data-filter=".'+value+'">'+value+'</a>')	
-			  	 setTimeout(console.log.bind(console,"%cNombre d'éléments listés en "+value+" : "+"%c"+$('.'+value).length+"",'color: #333333;font-size:11px;font-family: "Google", sans-serif;','color: #ed1b24;font-size:11px;font-family: "Google", sans-serif;'),0)  
+			  $('.filter-button-group').append('<a class="button '+$DarkButton+'" data-filter=".'+value+'">'+value+'</a>');
+			  	 setTimeout(console.log.bind(console,"%cNombre d'éléments listés en "+value+" : "+"%c"+$('.'+value).length+"",'color: #333333;font-size:11px;font-family: "Google", sans-serif;','color: #ed1b24;font-size:11px;font-family: "Google", sans-serif;'),0);
 			});		
 			
 			// Affichage du Copyright			
@@ -136,7 +130,21 @@ $(window).on('load', function(){
 			setTimeout(function(){$('.masonry-apear').removeClass('masonry-apear transition');
 				console.groupEnd();
 				console.group("Chargement Photos")
-			},1000);			
+			},1000);	
+
+			// Tilt Js
+			$('.masonry-item').tilt({
+			    maxTilt:        5,
+				perspective:    1000,
+				easing:         "cubic-bezier(.03,.98,.52,.99)",
+				scale:          1,
+				speed:          400,
+				transition:     true,
+				disableAxis:    null,
+				reset:          true,
+				glare:          true,
+				maxGlare:       1
+			});
 
 		next()})
 });
@@ -144,15 +152,15 @@ $(window).on('load', function(){
 // Transition
 function Transition(){
 	if($('.pagination')){$('.pagination').remove()}
-	$('body').append("<div class='pagination "+$DarkMode+"'></div>")
+	$('body').append("<div class='pagination "+$DarkMode+"'></div>");
 	// Conditions ouverture/Fermeture
 	if($CounterPagination % 2 === 0){
-		$('html').addClass('noscroll')
-		$('.photo-expanded').delay(1200).fadeIn(100)
+		$('html').addClass('noscroll');
+		$('.photo-expanded').delay(1200).fadeIn(100);
 	}
 	else{
-		$('html').removeClass('noscroll')
-		$('.photo-expanded').delay(1200).fadeOut(100)
+		$('html').removeClass('noscroll');
+		$('.photo-expanded').delay(1200).fadeOut(100);
 	}
 	$CounterPagination++;
 }
@@ -175,26 +183,50 @@ $('body').on('click','.masonry-item', function(){
 	Transition();
 	$('#image').css({
 		"background":"url('"+$(this).find(".masonry-content").attr('src')+"')"
-	})
+	});
 	var LoadImage = new Image();
 	var LoadImageTime = Date.now();	
 	LoadImage.src = $cdn+$optionsLarge+"/dev/Gumlet/assets/media/img/gallery/"+this.id;
 	LoadImage.onload = function(){
 		$('#image').css({"background":"url('"+LoadImage.src+"')"});
-		setTimeout(console.log.bind(console,"%cTemps de chargement Image "+this.id+" : "+"%c"+(Date.now()-LoadImageTime)+" ms",'color: #333333;font-size:11px;font-family: "Google", sans-serif;','color: green;font-size:11px;font-family: "Google", sans-serif;'),0)
+		setTimeout(console.log.bind(console,"%cTemps de chargement Image "+this.id+" : "+"%c"+(Date.now()-LoadImageTime)+" ms",'color: #333333;font-size:11px;font-family: "Google", sans-serif;','color: green;font-size:11px;font-family: "Google", sans-serif;'),0);
 	}
 })
 
 // Mode Sombre		
 function DarkMode(){
 	$DarkMode = !$DarkMode;
-	$('.dark-bg').toggleClass('light-bg')
-	$('.userSide').toggleClass('dark-pulse pulse')
-	$('.button,.close').toggleClass('dark-btn')
-	$('.logo').toggleClass('logo-light')
+	$('.dark-bg').toggleClass('light-bg');
+	$('.userSide').toggleClass('dark-pulse pulse');
+	$('.button,.close').toggleClass('dark-btn');
+	$('.logo').toggleClass('logo-light');
 	localStorage.setItem('DarkMode', $DarkMode);			
 }
 
 // Switch mode Theme Dark / Light en cliquant sur le logo
 $('.logo').on('click',function(){DarkMode();})
+
+	
+
+$(window).resize(function() {
+
+	// Bloque les problèmes de rendu au Resize
+	if(!$('html').hasClass('noscroll')){
+		$('html').addClass('noscroll');
+		setTimeout(function() {
+			$('.noscroll').removeClass('noscroll');
+		}, 1500);
+	}
+	
+	// Modification de la taille des éléments au Resize
+	/*$options = "w="+parseInt($('.grid-sizer').outerWidth(true))+",f=jpeg";
+  	$(".masonry-content").each(function(index) {
+  		$newsrc =  $(this).attr("src").replace($MemoryOpt, $options)
+	  	 $(this).attr("src", $newsrc);
+	});
+	$MemoryOpt = $options;*/
+
+	// Modification de la taille des éléments au Resize
+});
+
 
